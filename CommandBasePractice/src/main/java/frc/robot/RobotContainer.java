@@ -3,10 +3,14 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot;
+import frc.robot.subsystems.Tank;
 
 public class RobotContainer {
+  private Tank tank;
 
   public RobotContainer() {
-  }
+    tank = new Tank();
 
+    tank.setDefaultCommand(tank.joystickActivation());
+  }
 }
