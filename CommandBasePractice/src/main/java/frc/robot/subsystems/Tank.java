@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -23,8 +25,6 @@ public class Tank extends SubsystemBase {
 
   private TalonSRX backMotorLeft;
   private TalonSRX frontMotorLeft;
-
-  private Joystick driverJoystick;
   /** Creates a new Tank. */
   public Tank() {
     backMotorRight = new TalonSRX(MotorConstants.BACK_MOTOR_RIGHT_Port);
@@ -46,26 +46,18 @@ public class Tank extends SubsystemBase {
 
     backMotorLeft.setNeutralMode(NeutralMode.Brake);
     frontMotorLeft.setNeutralMode(NeutralMode.Brake);
-
-    driverJoystick = new Joystick(JoystickConstants.DRIVER_JOYSTICK_PORT);
   }
 
-  public Command TankRightDrive(double wantedSpeed) {
-    return new ParallelCommandGroup(
-      new RunCommand(()-> backMotorRight.set(ControlMode.PercentOutput, wantedSpeed), this),
-      new RunCommand(()-> frontMotorRight.set(ControlMode.PercentOutput, wantedSpeed), this));
+  public Command TankRightDrive(DoubleSupplier wantedSpeed) {
+    return new RunCommand(()-> backMotorRight.set(ControlMode.PercentOutput, wantedSpeed.getAsDouble()), this);
   }
 
-  public Command TankLeftDrive(double wantedSpeed) {
-    return new ParallelCommandGroup(
-      new RunCommand(()-> backMotorLeft.set(ControlMode.PercentOutput, wantedSpeed), this),
-      new RunCommand(()-> frontMotorLeft.set(ControlMode.PercentOutput, wantedSpeed), this));
+  public Command TankLeftDrive(DoubleSupplier wantedSpeed) {
+    return new RunCommand(()-> backMotorLeft.set(ControlMode.PercentOutput, wantedSpeed.getAsDouble()), this);
   }
-
-  public Command joystickActivation() {
-    return new ParallelCommandGroup(
-      new RunCommand(()-> new JoystickButton(driverJoystick, JoystickConstants.RIGHT_Y_AXIS).whileTrue(this.TankRightDrive(driverJoystick.getRawAxis(JoystickConstants.RIGHT_Y_AXIS)))),
-      new RunCommand(()-> new JoystickButton(driverJoystick, JoystickConstants.LEFT_Y_AXIS).whileTrue(this.TankLeftDrive(driverJoystick.getRawAxis(JoystickConstants.LEFT_Y_AXIS)))));
+  
+  public Command TankDrive(DoubleSupplier wantedSpeedLeft, DoubleSupplier wantedSpeedRight) {
+    return new ParallelCommandGroup(TankLeftDrive(wantedSpeedLeft), TankRightDrive(wantedSpeedRight));
   }
 
   @Override
